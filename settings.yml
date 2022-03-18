@@ -1,24 +1,3 @@
-cfanprod2:
-    ECMWF:
-        dir_name: DY
-        syntrack_prefix: ""
-        num_ens: 52
-        max_step: 60
-        temporal_resolution: 6
-    NCEP:
-        dir_name: GEFS
-        syntrack_prefix: gefs_
-        num_ens: 32
-        max_step: 384
-        temporal_resolution: 6
-    paths:
-        syntrack:
-            al: /data/FORE/CFAN/TC/ATL/TRDIR
-        invest:
-            al: /data/FORE/CFAN/TC/ATL/TRDIR/INV
-        staging_dir: /home/cfanprod2/RD/TC/tcdb/data/staging
-        local_mysql_dir: /home/cfanprod2/RD/TC/tcdb/data/mysql
-        static_data_dir: /home/cfanprod2/RD/TC/tcdb/data/static
 jmiller:
     ECMWF:
         dir_name: DY
@@ -37,6 +16,6 @@ jmiller:
             al: /Users/jmiller/Work/data
         invest:
             al: /Users/jmiller/Work/data/INV/
-        staging_dir: /Users/jmiller/Work/tcdb/data/staging
-        local_mysql_dir: /Users/jmiller/Work/tcdb/data/mysql
-        static_data_dir: /Users/jmiller/Work/tcdb/data/static
+        staging_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/staging
+        local_mysql_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/mysql
+        static_data_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/static
