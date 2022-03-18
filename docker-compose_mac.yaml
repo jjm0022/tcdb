@@ -1,0 +1,26 @@
+---
+version: '3'
+
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: passwd
+      MYSQL_DATABASE: tc
+      MYSQL_USER: tc_dev
+      MYSQL_PASSWORD: passwd
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "tc_dev"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+    volumes:
+      - tcdb:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/my.cnf
+      - ./data/mysql:/var/lib/mysql-files
+    restart: always
+    ports:
+      - 3307:3306
+
+volumes:
+  tcdb: 

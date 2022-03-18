@@ -1,0 +1,15 @@
+name: tcdb
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - numpy
+  - python=3.8
+  - loguru
+  - dynaconf
+  - scipy
+  - sqlalchemy
+  - pandas
+  - mysql-connector-python
+  - ipython
+  - xarray
