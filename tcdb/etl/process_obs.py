@@ -11,9 +11,9 @@ warnings.filterwarnings("ignore")
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import atcf
-from config import settings
-from tables import (
+from tcdb.etl import atcf
+from tcdb.config import settings
+from tcdb.models import (
     Storm,
     Observation,
 )

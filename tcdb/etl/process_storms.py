@@ -11,11 +11,10 @@ import warnings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import atcf
-from tables import Region, Storm
-
-from config import settings
-from utils import greatCircleDistance
+from tcdb.etl import atcf
+from tcdb.models import Region, Storm
+from tcdb.config import settings
+from tcdb.utils import greatCircleDistance
 
 
 DATE_TIME = datetime.now(tz=timezone.utc)
@@ -119,7 +118,7 @@ def investSearch(session, storm_dict, date_time):
         # check to see if there's any existing invests with a matching start_date
         matched_storm = (
             session.query(Storm)
-            .where(Storm.nhc_numer >= 70)
+            .where(Storm.nhc_number >= 70)
             .where(Storm.region_id == storm_dict.get("region_id"))
             .where(Storm.start_date == storm_dict.get("start_date"))
             .one_or_none()
@@ -225,9 +224,9 @@ def process_storms(region, date_time, staging_dir=None):
             if storm.annual_id is None:
                 next_annual_id = (
                     session.query(Storm.annual_id)
-                    .where(storm.season == storm.season)
-                    .where(storm.region_id == storm.region_id)
-                    .order_by(storm.annual_id)
+                    .where(Storm.season == storm.season)
+                    .where(Storm.region_id == storm.region_id)
+                    .order_by(Storm.annual_id)
                     .all()[-1][0]
                     + 1
                 )
