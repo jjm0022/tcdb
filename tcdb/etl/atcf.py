@@ -46,14 +46,24 @@ def parse_aDeck(path):
     ]
 
     # with open(file_name, 'rb') as file_handle:
-    string_buffer = compressed_atcf_to_strio(path)
-    df = pd.read_csv(
-        string_buffer,
-        names=header_names,
-        index_col=False,
-        na_values=["", " ", " " * 2],
-        usecols=range(0, len(header_names)),
-    )
+    if path.name.endswith('.gz'):
+        string_buffer = compressed_atcf_to_strio(path)
+        df = pd.read_csv(
+            string_buffer,
+            names=header_names,
+            index_col=False,
+            na_values=["", " ", " " * 2],
+            usecols=range(0, len(header_names)),
+        )
+    else:
+        df = pd.read_csv(
+            path,
+            names=header_names,
+            index_col=False,
+            na_values=["", " ", " " * 2],
+            usecols=range(0, len(header_names)),
+        )
+
 
     df["DATETIME"] = pd.to_datetime(df.DATETIME, format="%Y%m%d%H")
     # df["DATETIME"] = df["DATETIME"].dt.tz_localize(UTC)
