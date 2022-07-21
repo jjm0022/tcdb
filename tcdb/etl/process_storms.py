@@ -227,14 +227,18 @@ def processStorms(region, date_time, staging_dir=None):
 
             # give new storms an annual id
             if storm.annual_id is None:
-                next_annual_id = (
-                    session.query(Storm.annual_id)
-                    .where(Storm.season == storm.season)
-                    .where(Storm.region_id == storm.region_id)
-                    .order_by(Storm.annual_id)
-                    .all()[-1][0]
-                    + 1
-                )
+                try:
+                    next_annual_id = (
+                        session.query(Storm.annual_id)
+                        .where(Storm.season == storm.season)
+                        .where(Storm.region_id == storm.region_id)
+                        .order_by(Storm.annual_id)
+                        .all()[-1][0]
+                        + 1
+                    )
+                except IndexError: # means this is the first storm of the season
+                    next_annual_id = 1
+
                 logger.info(f"Assigning annual_id {next_annual_id} to {storm.name}")
                 storm.annual_id = next_annual_id
                 session.add(storm)
