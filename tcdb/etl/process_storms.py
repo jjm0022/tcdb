@@ -176,7 +176,7 @@ def namedStormSearch(session, storm_dict, date_time):
     return matched_storm
 
 
-def process_storms(region, date_time, staging_dir=None):
+def processStorms(region, date_time, staging_dir=None):
     """This script does multiple things:
     1) loop through bdeck files and match with existing storms in db
     2) if match is found check to see if any fields need to be updated
@@ -289,4 +289,10 @@ if __name__ == "__main__":
     # date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H").replace(tzinfo=timezone.utc)
     date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H")
 
-    process_storms(args.region, date_time, staging_dir=args.input_dir)
+    if args.input_dir is None:
+        staging_dir = Path(settings.paths.staging_dir).joinpath('bdeck')
+    else:
+        staging_dir = Path(args.input_dir)
+
+
+    processStorms(args.region, date_time, staging_dir=staging_dir)

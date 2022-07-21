@@ -23,7 +23,7 @@ DATE_STR = DATE_TIME.isoformat().split(".")[0]
 RUN_ID = f"OBS__{DATE_TIME.isoformat()}"
 
 
-def process_observations(region, date_time=None, staging_dir=None):
+def processObservations(region, date_time=None, staging_dir=None):
     paths = settings.get("paths")
 
     if not staging_dir:
@@ -139,4 +139,4 @@ if __name__ == "__main__":
     else:
         # date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H").replace(tzinfo=timezone.utc)
         date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H")
-    process_observations(args.region, date_time, staging_dir=args.input_dir)
+    processObservations(args.region, date_time, staging_dir=args.input_dir)
