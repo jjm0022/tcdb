@@ -136,6 +136,11 @@ def namedStormSearch(session, storm_dict, date_time):
     matched_storm = session.query(Storm).where(Storm.nhc_id == storm_dict.get("nhc_id")).one_or_none()
 
     if matched_storm:  # easy scenario, storm with matching nhcId already exists
+        # assume that we should only update the end_date if the new date is greater than the current date.
+        # this should keep from accidentally running an old file and updating to an older date accidentally
+        if matched_storm.end_date > storm_dict.get('end_date'):
+            logger.warning(f"Current `end_date` [{matched_storm.end_date.isoformat()}) is newer than the proposed update ({storm_dict.get('end_date').isoformat()}). Returning the existing DB entry")
+            return matched_storm
         logger.debug(f"{storm_dict.get('name')} matches with record {matched_storm.id} based on nhc_id search")
         # Assume the storm_dict has the most up-to-date information and use it to update the Storm object
         for key, value in storm_dict.items():
