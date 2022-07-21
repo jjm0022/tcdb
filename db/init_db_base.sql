@@ -145,5 +145,3 @@ CREATE UNIQUE INDEX tracks_index ON tracks(forecast_id, storm_id, ensemble_numbe
 CREATE UNIQUE INDEX steps_index ON steps(track_id, hour);
 
 SET FOREIGN_KEY_CHECKS=1;
-
-LOAD DATA INFILE '/var/lib/mysql-files/models_table.csv' INTO TABLE models FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
