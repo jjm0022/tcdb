@@ -1,6 +1,5 @@
 import argparse
 import sys
-import numpy as np
 from loguru import logger
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
@@ -89,7 +88,7 @@ def investSearch(session, storm_dict, date_time):
         None: If a named storm was found that can be associated with the invest `storm_dict`
 
     """
-    # If the end_date is older than 6 hours there's a chance the invest has transitioned to a named storm so we need to search the named
+    # If the end_date is older than 24 hours there's a chance the invest has transitioned to a named storm so we need to search the named
     # storms to see if we can find a match. There's a small chance multiple storms could have the same start_date so we need to use the
     # starting location to be certain when matching an invest to a named storm. If multiple named storms are found with the same start_date,
     # the named storm with a starting location that is closest to the invest starting location is used.
@@ -112,7 +111,7 @@ def investSearch(session, storm_dict, date_time):
         if len(named_storms) > 0:
             matched_storm = getClosestStorm(named_storms, storm_dict)
             if matched_storm is not None:  # if matched_storm is anything but None
-                logger.info(f"{storm_dict.name} has transitioned to {matched_storm.id:02d}.{matched_storm.name}. ")
+                logger.info(f"{storm_dict.get('name')} has transitioned to {matched_storm.id:02d}.{matched_storm.name}. ")
                 return None  # We don't want to make any updates to invests that have transitioned to named storms
 
         # check to see if there's any existing invests with a matching start_date
@@ -202,7 +201,7 @@ def processStorms(region, date_time, staging_dir=None):
     with Session() as session:
         region_record = session.query(Region).where(Region.short_name == region).one()
 
-        for file in sorted(staging_dir.glob(f"b{region.lower()}*.dat")):
+        for file in sorted(staging_dir.glob(f"b{region.lower()}*.csv")):
             # build storm object from bdeck information
             storm_dict = atcf.toStormDict(file)
             storm_dict["region_id"] = region_record.id
@@ -211,11 +210,12 @@ def processStorms(region, date_time, staging_dir=None):
             else:
                 storm_dict["status"] = "Archive"
 
-            logger.log("STORM", f"---------- {storm_dict.get('name')} [{storm_dict.get('nhc_id')}] ----------")
+            logger.info(f"---------- {storm_dict.get('name')} [{storm_dict.get('nhc_id')}] ----------")
             # if the storm is currently an invest we can't use nhc_id to search.
             if storm_dict.get("nhc_number") >= 70:
                 storm = investSearch(session, storm_dict, date_time)
                 if storm is None:  # old invest or invest that has transitioned to a named storm
+                    file.unlink()
                     continue
             else:
                 storm = namedStormSearch(session, storm_dict, date_time)
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Process bdeck files and update existing storm records or insert new records"
     )
-    parser.add_argument("region", type=str, choices=["AL", "EP"], help="NHC region to process")
+    parser.add_argument("region", type=str, choices=["AL", "EP", "WP", "CP", "IO", "SH"], help="NHC region to process")
     parser.add_argument(
         "-d",
         "--current_datetime",
@@ -283,8 +283,6 @@ if __name__ == "__main__":
         ]
     }
     logger.configure(**config)
-    # add custom level to distinguish between different bdeck files
-    logger.level(name="STORM", no=40, color="<light-magenta>")
 
     # date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H").replace(tzinfo=timezone.utc)
     date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H")

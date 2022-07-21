@@ -33,11 +33,13 @@ def processObservations(region, date_time=None, staging_dir=None):
     run_id = RUN_ID
     logger.info(f"`run_id` set to: {run_id}")
 
-    engine = create_engine("mysql+mysqlconnector://tc_dev:passwd@127.0.0.1:3307/tc")
+    engine = create_engine(
+        f"mysql+mysqlconnector://{settings.db.get('USER')}:{settings.db.get('PASS')}@{settings.db.get('HOST')}:{settings.db.get('PORT')}/{settings.db.get('SCHEMA')}"
+    )
     Session = sessionmaker(engine)
     with Session() as session:
 
-        for file_path in sorted(staging_dir.glob(f"b{region.lower()}*.dat")):
+        for file_path in sorted(staging_dir.glob(f"b{region.lower()}*.csv")):
             # if a date_time was provided, we only want to process files that have that datetime in them
             if date_time:
                 if not atcf.contains_date(file_path, date_time):
