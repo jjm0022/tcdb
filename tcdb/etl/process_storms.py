@@ -250,8 +250,6 @@ def processStorms(region, date_time, staging_dir=None):
 
             # flush the changes/additions to the DB
             session.commit()
-            # logger.debug(f"Updating the following storms: {session.dirty}")
-            # logger.debug(f"Adding the following storms: {session.new}")
 
 
 if __name__ == "__main__":
