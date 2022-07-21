@@ -9,6 +9,9 @@ from datetime import timezone, datetime, timedelta
 
 from tcdb.utils import get_storm_type 
 import tcdb.validation as val
+import warnings
+warnings.filterwarnings("ignore")
+
 
 UTC = timezone.utc
 
