@@ -16,6 +16,8 @@ jmiller:
             al: /Users/jmiller/Work/data
         invest:
             al: /Users/jmiller/Work/data/INV/
-        staging_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/staging
-        local_mysql_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/mysql
-        static_data_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/static
+        data_lake: /Work_Data/tcdb/data/lake
+        staging_dir: /Work_Data/tcdb/data/staging
+        local_mysql_dir: /Work_Data/tcdb/data/mysql
+        static_data_dir: /Work_Data/tcdb/data/static
+        temporary_dir: /Work_Data/tcdb/data/tmp
