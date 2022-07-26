@@ -18,7 +18,7 @@ class Track(Base, DefaultTable):
 
     __table_args__ = (UniqueConstraint("forecast_id", "storm_id", "ensemble_number", name="tracks_index"),)
 
-    _steps = relationship("Step", order_by="Step.id", back_populates="_track")
+    _steps = relationship("Step", order_by="Step.id", back_populates="_track", cascade="all, delete-orphan")
     _storm = relationship("Storm", back_populates="_tracks")
     _forecast = relationship("Forecast", back_populates="_tracks")
 

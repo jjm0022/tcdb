@@ -14,7 +14,7 @@ class Model(Base, DefaultTable):
     short_name = Column(String(6), nullable=False, unique=True)
     last_update = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
 
-    _forecasts = relationship("Forecast", order_by="Forecast.datetime_utc", back_populates="_model")
+    _forecasts = relationship("Forecast", order_by="Forecast.datetime_utc", back_populates="_model", cascade="all, delete-orphan")
 
     @classmethod
     def from_dict(cls, d):

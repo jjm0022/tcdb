@@ -21,7 +21,7 @@ class Forecast(Base, DefaultTable):
         UniqueConstraint("region_id", "data_source_id", "model_id", "datetime_utc", name="forecasts_index"),
     )
 
-    _tracks = relationship("Track", order_by="Track.id", back_populates="_forecast")
+    _tracks = relationship("Track", order_by="Track.id", back_populates="_forecast", cascade="all, delete-orphan")
     _model = relationship("Model", back_populates="_forecasts")
 
     @classmethod
