@@ -290,6 +290,14 @@ def toStormDict(path):
     if not isinstance(path, pathlib.Path):
         path = Path(path)
 
+
+    basin = path.name[1:3]
+    # determine whic organization the data is coming from (to be used in the name for invests)
+    if basin.lower() in ['al', 'ep', 'cp']:
+        org = 'NHC'
+    else:
+        org = 'JTWC'
+
     df = parse_bDeck(path)
     if df.empty:
         return None
@@ -302,7 +310,7 @@ def toStormDict(path):
     nhc_number = df.SNUM.values[-1]
     subregion = df.SUBREGION.values[-1]
     if nhc_number >= 70:
-        name = f"NHC-{nhc_number:02d}{subregion}"
+        name = f"{org.upper()}-{nhc_number:02d}{subregion}"
     else:
         name = f"{storm_type}-{name}"
 
