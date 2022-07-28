@@ -19,7 +19,7 @@ def validate_pressure(x, raise_on_fail=False):
 
 
 def validate_velocity(x, raise_on_fail=False):
-    if (x >= 1) and (x <= 250):
+    if (x >= 0) and (x <= 250):
         return x
     else:
         if raise_on_fail:
