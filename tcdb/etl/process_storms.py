@@ -27,10 +27,10 @@ def getClosestStorm(matched_storms, storm_dict):
 
     Args:
         matched_storms (list[tables.Storm])
-        storm_dict (dict)
+        storm_dict (dict): dictionary with the keys "name", "start_lat", and "start_lon"
 
     Returns:
-        _type_: _description_
+        tcdb.models.Storm: The storm closest to the center of `storm_dict` 
     """
     storm_list = matched_storms
     if len(storm_list) == 1:  # only 1 storm found with the same start_date
@@ -43,7 +43,10 @@ def getClosestStorm(matched_storms, storm_dict):
         distance_dict = dict()
         for stm in matched_storms:
             distance = greatCircleDistance(
-                storm_dict.get("start_lat"), storm_dict.get("start_lon"), stm.start_lat, stm.start_lon
+                storm_dict.get("start_lat"),
+                storm_dict.get("start_lon"),
+                stm.start_lat,
+                stm.start_lon
             )
             distance_dict[distance] = stm
             logger.debug(f"{stm.id:02d}.{stm.name} started {distance:0.2f} nm from {storm_dict.get('name')}")
@@ -196,7 +199,6 @@ def processStorms(region, date_time, staging_dir=None):
             if storm_dict.get("nhc_number") >= 90:
                 storm = investSearch(session, storm_dict, date_time)
                 if storm is None:  # old invest or invest that has transitioned to a named storm
-                    file.unlink()
                     continue
             else:
                 storm = namedStormSearch(session, storm_dict)
