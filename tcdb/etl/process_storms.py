@@ -100,6 +100,7 @@ def investSearch(session, storm_dict, date_time):
         # check to see if there's any named storms with the same start date so we don't add a new invest for a storm that has already transitioned
         named_storms = (
             session.query(Storm)
+            .where(Storm.nhc_number <= 50)
             .where(Storm.region_id == storm_dict.get("region_id"))
             .where(Storm.start_date == storm_dict.get("start_date"))
             .all()
