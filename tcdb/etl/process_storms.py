@@ -21,25 +21,6 @@ DATE_STR = DATE_TIME.isoformat().split(".")[0]
 RUN_ID = f"STORMS__{DATE_TIME.isoformat()}"
 
 
-def findMatchingStorm(cursor, query, args, return_many=False):
-    logger.trace(f"{query}")
-    cursor.execute(query, args)
-    rows = cursor.fetchall()
-    if return_many:  # used when trying to match an old invest that has transitioned to a named storm
-        if len(rows) == 0:
-            return None
-        else:
-            logger.info(f"Found {len(rows)} storms with start_date [{rows[0][6]}]")
-            return rows
-    else:
-        if len(rows) == 0:
-            return None
-        elif len(rows) == 1:
-            return rows[0]
-        else:
-            raise ValueError(f"Too many rows ({len(rows)}) returned for query: {query} with arguments {args}")
-
-
 def getClosestStorm(matched_storms, storm_dict):
     """Given a list of Storm records, this function will return the record of the storm that has the closest starting location
     to `storm_dict` that is within 100 nmi.
