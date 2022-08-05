@@ -62,6 +62,6 @@ def extractGZip(in_path, out_dir, remove=False):
         with open(out_path, 'wb') as f:
             shutil.copyfileobj(g, f)
     if remove:
-        logger.debug(f"Removing {in_path.as_posix()}")
+        logger.trace(f"Removing {in_path.as_posix()}")
         in_path.unlink()
     return out_path

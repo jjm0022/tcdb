@@ -43,6 +43,9 @@ def downloadLocally(url, local_path):
 
 
 def getStormDict(text):
+    """
+    TODO: REMOVE THIS FUNCTION 
+    """
 
     lines = text.split("\n")
     lines = [(l.replace(" ", "")).split(",") for l in lines]
@@ -85,6 +88,9 @@ def getStormDict(text):
 
 
 def processBdecks(bdeck_dir, storm_dir, backfill=False):
+    """
+    TODO: REMOVE THIS FUNCTION 
+    """
 
     files_saved = 0
 
@@ -122,40 +128,43 @@ if __name__ == "__main__":
     basin_config = {
         'al': {
             'pattern': f'bal[012349][0123456789]{now.year}.dat',
-            'url': 'https://ftp.nhc.noaa.gov/atcf/btk/'
+            'url': settings.atcf.bdeck.nhc_url
         },
         'ep': {
             'pattern': f'bep[012349][0123456789]{now.year}.dat',
-            'url': 'https://ftp.nhc.noaa.gov/atcf/btk/'
+            'url': settings.atcf.bdeck.nhc_url
         },
         'cp': {
             'pattern': f'bcp[012349][0123456789]{now.year}.dat',
-            'url': 'https://ftp.nhc.noaa.gov/atcf/btk/'
+            'url': settings.atcf.bdeck.nhc_url
         },
         'wp': {
             'pattern': f'bwp[012349][0123456789]{now.year}.dat',
-            'url': 'https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/',
+            'url': settings.atcf.bdeck.jtwc_url
         },
         'io': {
             'pattern': f'bio[012349][0123456789]{now.year}.dat',
-            'url': 'https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/',
+            'url': settings.atcf.bdeck.jtwc_url
         },
-        'sh': {
-            'pattern': f'bsh[012349][0123456789]{now.year}.dat',
-            'url': 'https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/',
-        },
+        #'sh': {
+        #    'pattern': f'bsh[012349][0123456789]{now.year}.dat',
+        #    'url': settings.atcf.bdeck.jtwc_url
+        #},
     }
 
     # configure logger
     if os.environ.get('RUN_BY_CRON', 0):
         log_name = f"{__file__.split('/')[-1].split('.')[0]}.log"
         level = "INFO"
+        force_update = False
     else:
         log_name = None
-        level = "TRACE"
+        level = "DEBUG"
+        force_update = True
     config = utils.get_logger_config(log_name, level) 
     logger.configure(**config)
     logger.info(f"Starting {__file__}")
+
 
     # set up paths
     download_path = Path(settings.paths.temporary_dir)
@@ -170,8 +179,6 @@ if __name__ == "__main__":
 
             bdeck_dir = data_lake.joinpath(f"atcf/{basin}/bdeck/{now.year}")
             bdeck_dir.mkdir(parents=True, exist_ok=True)
-            #storm_dir = data_lake.joinpath(f"atcf/{basin}/storm/{now.year}")
-            #storm_dir.mkdir(parents=True, exist_ok=True)
 
             url = basin_dict.get('url')
             file_pattern = basin_dict.get('pattern')
@@ -199,6 +206,13 @@ if __name__ == "__main__":
                         logger.info(f"Copying {final_path.as_posix()} to staging directory for processing")
                         staging_path.write_text(final_path.read_text())
                         files_to_staging += 1
+                    else:
+                        if force_update:
+                            most_recent_file = list(sorted(bdeck_dir.glob(f"{file_name.split('.')[0]}*")))[-1]
+                            logger.info(f"`force_update` is True. Copying {most_recent_file.as_posix()} to staging directory")
+                            staging_path = staging_dir.joinpath(f"{most_recent_file.name}")
+                            staging_path.write_text(most_recent_file.read_text())
+                            files_to_staging += 1
                     
             logger.info(f"Added {files_to_staging} updated bdeck files to staging directory from {basin}")
             if files_to_staging > 0: 

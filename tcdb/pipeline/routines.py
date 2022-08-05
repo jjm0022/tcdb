@@ -11,7 +11,7 @@ from tcdb.config import settings
 DATE_TIME = datetime.now(tz=timezone.utc)
 RUN_ID = f"ROUTINE__{DATE_TIME.isoformat()}"
 
-def updateActiveSystems(max_hours_old=12):
+def updateActiveSystems(max_hours_old=24):
     hours_old = timedelta(hours=max_hours_old)
     engine = create_engine(
         f"mysql+mysqlconnector://{settings.db.get('USER')}:{settings.db.get('PASS')}@{settings.db.get('HOST')}:{settings.db.get('PORT')}/{settings.db.get('SCHEMA')}"

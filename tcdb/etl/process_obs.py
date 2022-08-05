@@ -71,26 +71,18 @@ def processObservations(region, date_time=None, staging_dir=None):
                     .where(Observation.datetime_utc == ob_dict.get("datetime_utc"))
                     .one_or_none()
                 )
-
                 if observation:  # If observation already exists, check to see if it needs to be updated
-                    # Assume the ob_dict has the most up-to-date information and use it to update the Observation object
-                    for key, value in ob_dict.items():
-                        if observation.__getattribute__(key) != value:
-                            logger.debug(
-                                f"Updating {observation.__tablename__}.{key} for record {observation.id} from {observation.__getattribute__(key)} to {value}"
-                            )
-                            observation.__setattr__(key, value)
-
+                    # Assume the ob_dict has the most up-to-date information and use it to update the Observation record
+                    updated_keys = observation.updateFromDict(ob_dict)
+                    if len(updated_keys) == 0:
+                        logger.trace(f"No updates needed for observation {observation.id}")
                     if observation in session.dirty:
                         observation.run_id = RUN_ID
-
                 else:
                     observation = Observation.from_dict(ob_dict)
                     observation.run_id = RUN_ID
                     session.add(observation)
-                    logger.info(
-                        f"Adding new observation record for {storm.name} [{observation.datetime_utc.isoformat()}]"
-                    )
+                    logger.info(f"Adding new observation record for {storm.name} [{observation.datetime_utc.isoformat()}]")
 
             session.commit()
 

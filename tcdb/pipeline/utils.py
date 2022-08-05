@@ -62,7 +62,7 @@ def getStormType(wind_speed, region="AL"):
     else:
         return "CY"
 
-def get_logger_config(file_name=None, level="INFO"):
+def get_logger_config(file_name=None, level="DEBUG"):
     handles = []
     if file_name:
         handles.append({
@@ -81,7 +81,7 @@ def get_logger_config(file_name=None, level="INFO"):
         "format": "<g>{time:YYYY-MM-DD HH:mm:ss}</> | <lvl>{level: <10}</> | <c>{name}</>:<c>{function}</>:<c>{line}</> | <lvl>{message}</>",
         "backtrace": "True",
         "catch": "True",
-        "level": "DEBUG",
+        "level": level,
         "enqueue": "True",
     })
 

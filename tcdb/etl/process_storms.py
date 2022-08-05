@@ -93,9 +93,7 @@ def investSearch(session, storm_dict, date_time):
     # starting location to be certain when matching an invest to a named storm. If multiple named storms are found with the same start_date,
     # the named storm with a starting location that is closest to the invest starting location is used.
     if date_time - storm_dict.get("end_date") >= timedelta(hours=24):  # most likely an old invest
-        logger.info(
-            f"Most recent observation [{storm_dict.get('end_date').isoformat()}] for {storm_dict.get('name')} is older than 24 hours"
-        )
+        logger.info(f"Most recent observation [{storm_dict.get('end_date').isoformat()}] for {storm_dict.get('name')} is older than 24 hours")
         return None
     # if the end_date is less than 24
     else:
@@ -106,14 +104,12 @@ def investSearch(session, storm_dict, date_time):
             .where(Storm.start_date == storm_dict.get("start_date"))
             .all()
         )
-
         # if there are any named storms with the same start date
         if len(named_storms) > 0:
             matched_storm = getClosestStorm(named_storms, storm_dict)
             if matched_storm is not None:  # if matched_storm is anything but None
-                logger.info(f"{storm_dict.get('name')} has transitioned to {matched_storm.id:02d}.{matched_storm.name}. ")
+                logger.info(f"{storm_dict.get('name')} has transitioned to {matched_storm.id:02d}.{matched_storm.name}")
                 return None  # We don't want to make any updates to invests that have transitioned to named storms
-
         # check to see if there's any existing invests with a matching start_date
         matched_storm = (
             session.query(Storm)
@@ -122,14 +118,16 @@ def investSearch(session, storm_dict, date_time):
             .where(Storm.start_date == storm_dict.get("start_date"))
             .one_or_none()
         )
-
         if matched_storm is None:  # new invest
             matched_storm = Storm.from_dict(storm_dict)
+        else:
+            # see if anything needs to be updated
+            updated_keys = matched_storm.updateFromDict(storm_dict)
 
     return matched_storm
 
 
-def namedStormSearch(session, storm_dict, date_time):
+def namedStormSearch(session, storm_dict):
     # Two Scenarios:
     # 1) storm already exists
     # 2) first observation after transition from invest
@@ -143,12 +141,9 @@ def namedStormSearch(session, storm_dict, date_time):
             return matched_storm
         logger.debug(f"{storm_dict.get('name')} matches with record {matched_storm.id} based on nhc_id search")
         # Assume the storm_dict has the most up-to-date information and use it to update the Storm object
-        for key, value in storm_dict.items():
-            if matched_storm.__getattribute__(key) != value:
-                logger.debug(
-                    f"Updating {matched_storm.__tablename__}.{key} for record {matched_storm.id} from {matched_storm.__getattribute__(key)} to {value}"
-                )
-                matched_storm.__setattr__(key, value)
+        updated_keys = matched_storm.updateFromDict(storm_dict)
+        if len(updated_keys) == 0:
+            logger.info(f"No updates needed for {matched_storm.id} [{matched_storm.name}]")
     else:  # first observation after transition from invest
         # Need to find the invest in the same region with the same start_date
         matched_storms = (
@@ -158,22 +153,17 @@ def namedStormSearch(session, storm_dict, date_time):
             .where(Storm.start_date == storm_dict.get("start_date"))
             .all()
         )
-
         if len(matched_storms) >= 1:  # found invest(s) with matching start_date
             matched_storm = getClosestStorm(matched_storms, storm_dict)
             if matched_storm is not None:  # if matched_storm is anything but None
+                if matched_storm.name != storm_dict.get('name'):
+                    logger.info(f"{matched_storm.id} [{matched_storm.name}] has transitioned to {storm_dict.get('name')}")
                 # Assume the storm_dict has the most up-to-date information and use it to update the Storm object
-                for key, value in storm_dict.items():
-                    if matched_storm.__getattribute__(key) != value:
-                        logger.debug(
-                            f"Updating {matched_storm.__tablename__}.{key} for record {matched_storm.id} from {matched_storm.__getattribute__(key)} to {value}"
-                        )
-                        matched_storm.__setattr__(key, value)
-                logger.info(f"{matched_storm.id:02d}.{matched_storm.name} has transitioned to {storm_dict.get('name')}")
+                updated_keys = matched_storm.updateFromDict(storm_dict)
+                if len(updated_keys) == 0:
+                    logger.info(f"No updates needed for {matched_storm.id} [{matched_storm.name}]")
             else:
-                logger.warning(
-                    f"None of the matching storms had a close enough starting locaion... {matched_storms}\n\n{storm_dict}"
-                )
+                logger.warning(f"None of the matching storms had a close enough starting locaion... {matched_storms}\n\n{storm_dict}")
         else:  # Must be populating the table from scratch !!!SHOULD NOT OCCUR WHEN RUNNING OPERATIONALLY!!!
             logger.debug(f"No matches found for {storm_dict.get('name')} after nhc_id and start_date search")
             matched_storm = Storm.from_dict(storm_dict)
@@ -205,10 +195,14 @@ def processStorms(region, date_time, staging_dir=None):
     Session = sessionmaker(engine)
     with Session() as session:
         region_record = session.query(Region).where(Region.short_name == region).one()
-
+        # using sorted ensures we process any invest files after named storms
         for file in sorted(staging_dir.glob(f"b{region.lower()}*.csv")):
             # build storm object from bdeck information
-            storm_dict = atcf.toStormDict(file)
+            try:
+                storm_dict = atcf.toStormDict(file)
+            except:
+                logger.error(f"Unable to parse {file.as_posix()}")
+                continue
             storm_dict["region_id"] = region_record.id
             if date_time - storm_dict.get("end_date") <= timedelta(hours=16):
                 storm_dict["status"] = "Active"
@@ -217,13 +211,13 @@ def processStorms(region, date_time, staging_dir=None):
 
             logger.info(f"---------- {storm_dict.get('name')} [{storm_dict.get('nhc_id')}] ----------")
             # if the storm is currently an invest we can't use nhc_id to search.
-            if storm_dict.get("nhc_number") >= 70:
+            if storm_dict.get("nhc_number") >= 90:
                 storm = investSearch(session, storm_dict, date_time)
                 if storm is None:  # old invest or invest that has transitioned to a named storm
                     file.unlink()
                     continue
             else:
-                storm = namedStormSearch(session, storm_dict, date_time)
+                storm = namedStormSearch(session, storm_dict)
 
             # give new storms an annual id
             if storm.annual_id is None:
