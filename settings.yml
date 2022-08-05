@@ -21,3 +21,30 @@ jmiller:
         local_mysql_dir: /Work_Data/tcdb/data/mysql
         static_data_dir: /Work_Data/tcdb/data/static
         temporary_dir: /Work_Data/tcdb/data/tmp
+    atcf:
+        bdeck:
+            nhc_url: https://ftp.nhc.noaa.gov/atcf/btk/
+            jtwc_url: https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/
+        adeck:
+            nhc_url: https://ftp.nhc.noaa.gov/atcf/aid_public/
+            jtwc_url: https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/
+            models:
+                - OFCL
+                - OFCI
+                - AVNO #
+                - AEMN # GEFS Ensemble Mean
+                - EMX  # ECMWF HRES
+                - EEMN # ECMWF Ens Mean
+                - HWRF
+                - HWFI
+                - HMON
+                - HMNI
+                - JTWC
+                - CMC  # Canadian
+                - LGEM
+                - SHIP
+                - EGRR
+                - HCCA
+                - IVCN
+                - TVCA
+                - FSSE
