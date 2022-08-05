@@ -15,7 +15,7 @@ def validate_pressure(x, raise_on_fail=False):
             raise ValueError(f"Unrealistic value of {x} identified for pressure")
         else:
             logger.trace(f"Unrealistic value of {x} identified for pressure")
-            return None
+            return 1000
 
 
 def validate_velocity(x, raise_on_fail=False):
