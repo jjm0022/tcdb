@@ -95,14 +95,27 @@ def investSearch(session, storm_dict, date_time):
             if matched_storm is not None:  # if matched_storm is anything but None
                 logger.info(f"{storm_dict.get('name')} has transitioned to {matched_storm.id:02d}.{matched_storm.name}")
                 return None  # We don't want to make any updates to invests that have transitioned to named storms
+
         # check to see if there's any existing invests with a matching start_date
-        matched_storm = (
+        # apparently JTWC doesn't give a shit and the first couple of updates for an invest the starting information is capable
+        # of changing significantly so I'm starting to think it will be better to just search for nhc_id and then make sure the
+        # start date is within 24 hours to match because we can't count on the start lat/lon or start date to be correct in the first
+        # update for a storm
+        matched_storms = (
             session.query(Storm)
-            .where(Storm.nhc_number >= 70)
-            .where(Storm.region_id == storm_dict.get("region_id"))
-            .where(Storm.start_date == storm_dict.get("start_date"))
-            .one_or_none()
+            .where(Storm.nhc_id == storm_dict.get("nhc_id"))
+            .all()
         )
+        matched_storm = None
+        for _storm in matched_storms:
+            # hour difference in start_dates
+            td = abs((_storm.start_date - storm_dict.get('start_date')).total_seconds() / 60 / 60)
+            if td > 24:
+                continue
+            else:
+                matched_storm = _storm
+                break
+
         if matched_storm is None:  # new invest
             matched_storm = Storm.from_dict(storm_dict)
         else:
