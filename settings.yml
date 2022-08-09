@@ -23,9 +23,11 @@ jmiller:
         temporary_dir: /Work_Data/tcdb/data/tmp
     atcf:
         bdeck:
+            file_pattern: "b{basin}[012349][0123456789]{year}.dat"
             nhc_url: https://ftp.nhc.noaa.gov/atcf/btk/
             jtwc_url: https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/
         adeck:
+            file_pattern: "a{basin}[012349][0123456789]{year}.dat"
             nhc_url: https://ftp.nhc.noaa.gov/atcf/aid_public/
             jtwc_url: https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/
             models:

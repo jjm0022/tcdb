@@ -193,7 +193,7 @@ if __name__ == "__main__":
         "-n",
         "--now",
         action='store_true',
-        help='Use the current date_time for processing the file. Overrides the datetime provided with `-dA`'
+        help='Use the current date_time for processing the file. Overrides the datetime provided with `-d`'
     )
     parser.add_argument(
         '-b',
@@ -211,15 +211,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    regions = args.regions
-    if regions is None:
-        #regions = ["al", "ep", "wp", "cp", "io", "sh"]
-        regions = ["al", "ep", "wp", "cp", "io"]
-    else:
-        regions = regions.split(',')
-
-    backfill = args.backfill
-
 
     # configure logger
     if os.environ.get('RUN_BY_CRON', 0):
@@ -235,9 +226,7 @@ if __name__ == "__main__":
         config = utils.get_logger_config(log_name, level) 
         logger.configure(**config)
         logger.info(f"Log level has been set to: {level}")
-
     logger.info(f"Starting {__file__}")
-    logger.info(f"Runing for the following regions: {regions}")
 
     if args.date_time is None:
         date_time = None
@@ -245,39 +234,7 @@ if __name__ == "__main__":
     else:
         date_time = datetime.strptime(args.date_time, "%Y%m%d%H")
         season = date_time.year
-
-    if args.now:
-        date_time = NOW
         season = NOW.year
-
-
-    basin_config = {
-        'al': {
-            'pattern': f'aal[012349][0123456789]{season}.dat.gz',
-            'url': settings.atcf.adeck.nhc_url
-        },
-        'ep': {
-            'pattern': f'aep[012349][0123456789]{season}.dat.gz',
-            'url': settings.atcf.adeck.nhc_url
-        },
-        'cp': {
-            'pattern': f'acp[012349][0123456789]{season}.dat.gz',
-            'url': settings.atcf.adeck.nhc_url
-        },
-        'wp': {
-            'pattern': f'awp[012349][0123456789]{season}.dat',
-            'url': settings.atcf.adeck.jtwc_url
-        },
-        'io': {
-            'pattern': f'aio[012349][0123456789]{season}.dat',
-            'url': settings.atcf.adeck.jtwc_url
-        },
-        'sh': {
-            'pattern': f'ash[012349][0123456789]{season}.dat',
-            'url': settings.atcf.adeck.jtwc_url
-        },
-    }
-
     # set date_time to the most recent forecast cycle hour
     # if date_time is none leave it
     if date_time is None:
@@ -288,9 +245,32 @@ if __name__ == "__main__":
             date_time = date_time - timedelta(hours=1)
         logger.info(f"Datetime has been adjusted to: {date_time.strftime('%Y%m%d%H')}")
 
+    regions = args.regions
+    if regions is None:
+        regions = ["al", "ep", "wp", "cp", "io"]
+    else:
+        regions = regions.split(',')
+    logger.info(f"Runing for the following regions: {regions}")
+    basin_config = dict()
+    for region in regions:
+        if region in ['al', 'ep', 'cp']:
+            basin_config[region] = {
+                'pattern': settings.atcf.adeck.file_pattern.format_map({'basin': region, 'year': season}) + ".gz",
+                'url': settings.atcf.adeck.nhc_url
+            }
+        elif region in ['wp', 'io', 'sh']:
+            basin_config[region] = {
+                'pattern': settings.atcf.adeck.file_pattern.format_map({'basin': region, 'year': season}),
+                'url': settings.atcf.adeck.jtwc_url
+            }
+
+    backfill = args.backfill
+
+    if args.now:
+        date_time = NOW
+
     # get only the regions that were passed in the options
-    basins = {region: info for region, info in basin_config.items() if region in regions}
-    run(basin_config=basins, season=season, date_time=date_time, backfill=backfill)
+    run(basin_config=basin_config, season=season, date_time=date_time, backfill=backfill)
 
     processing_time = datetime.now() - NOW
     logger.info(f"Total time to run: {processing_time.total_seconds() / 60:0.1f} minutes")
