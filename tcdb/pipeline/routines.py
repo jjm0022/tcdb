@@ -32,6 +32,9 @@ def updateActiveSystems(max_hours_old=24):
 
 def removeOldInvests(max_days_old=30):
     """
+    NOTE: Starting to think that removing old invests from the DB might not be the best idea. Putting this on hold for a little bit to stew it over
+
+
     Remove any records in the storm table that are still and invest (haven't transitions to a named storm) and are older
     than `max_days_old` days old.
 

@@ -1,9 +1,10 @@
+import argparse
 import requests
 import re
 import os
 import json
 import pendulum
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from loguru import logger
 from tempfile import TemporaryDirectory
@@ -18,8 +19,8 @@ from tcdb.etl.process_obs import processObservations
 
 from IPython.core.debugger import set_trace
 
-now = pendulum.now("UTC")
-timestamp = now.strftime("%Y%m%dT%H%M")
+NOW = pendulum.now("UTC")
+timestamp = NOW.strftime("%Y%m%dT%H%M")
 
 backfill = True
 
@@ -123,48 +124,18 @@ def processBdecks(bdeck_dir, storm_dir, backfill=False):
             files_saved += 1
     logger.info(f"Saved {files_saved} new storm files")
 
+def run(basin_config, date_time, force, backfill):
+    """_summary_
 
-if __name__ == "__main__":
-    basin_config = {
-        'al': {
-            'pattern': f'bal[012349][0123456789]{now.year}.dat',
-            'url': settings.atcf.bdeck.nhc_url
-        },
-        'ep': {
-            'pattern': f'bep[012349][0123456789]{now.year}.dat',
-            'url': settings.atcf.bdeck.nhc_url
-        },
-        'cp': {
-            'pattern': f'bcp[012349][0123456789]{now.year}.dat',
-            'url': settings.atcf.bdeck.nhc_url
-        },
-        'wp': {
-            'pattern': f'bwp[012349][0123456789]{now.year}.dat',
-            'url': settings.atcf.bdeck.jtwc_url
-        },
-        'io': {
-            'pattern': f'bio[012349][0123456789]{now.year}.dat',
-            'url': settings.atcf.bdeck.jtwc_url
-        },
-        #'sh': {
-        #    'pattern': f'bsh[012349][0123456789]{now.year}.dat',
-        #    'url': settings.atcf.bdeck.jtwc_url
-        #},
-    }
+    TODO: incorporate backfill
 
-    # configure logger
-    if os.environ.get('RUN_BY_CRON', 0):
-        log_name = f"{__file__.split('/')[-1].split('.')[0]}.log"
-        level = "INFO"
-        force_update = False
-    else:
-        log_name = None
-        level = "DEBUG"
-        force_update = True
-    config = utils.get_logger_config(log_name, level) 
-    logger.configure(**config)
-    logger.info(f"Starting {__file__}")
-
+    Args:
+        basin_config (_type_): _description_
+        date_time (_type_): _description_
+        force (_type_): _description_
+        backfill (_type_): _description_
+    """
+    
 
     # set up paths
     download_path = Path(settings.paths.temporary_dir)
@@ -177,7 +148,7 @@ if __name__ == "__main__":
 
         for basin, basin_dict in basin_config.items():
 
-            bdeck_dir = data_lake.joinpath(f"atcf/{basin}/bdeck/{now.year}")
+            bdeck_dir = data_lake.joinpath(f"atcf/{basin}/bdeck/{date_time.year}")
             bdeck_dir.mkdir(parents=True, exist_ok=True)
 
             url = basin_dict.get('url')
@@ -207,10 +178,12 @@ if __name__ == "__main__":
                         staging_path.write_text(final_path.read_text())
                         files_to_staging += 1
                     else:
-                        if force_update:
+                        if force:
+                            # get the file with the oldest timestamp
                             most_recent_file = list(sorted(bdeck_dir.glob(f"{file_name.split('.')[0]}*")))[-1]
-                            logger.info(f"`force_update` is True. Copying {most_recent_file.as_posix()} to staging directory")
+                            logger.info(f"`force` is True. Copying {most_recent_file.as_posix()} to staging directory")
                             staging_path = staging_dir.joinpath(f"{most_recent_file.name}")
+                            # copy to staging directory
                             staging_path.write_text(most_recent_file.read_text())
                             files_to_staging += 1
                     
@@ -226,4 +199,101 @@ if __name__ == "__main__":
                     logger.trace(f"Removing {f.as_posix()}")
                     f.unlink()
 
-        logger.info(f"Finished running {__file__}")
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        description="Download and process bdeck files"
+    )
+    parser.add_argument(
+        "-r",
+        "--regions",
+        type=str,
+        default=None,
+        help="NHC region to process. If option is omitted all regins will be used. Multiple regions should be separated with a comma `,`"
+    )
+    parser.add_argument(
+        "-d",
+        "--date_time",
+        type=str,
+        default=None,
+        help="Datetime use to determine if an observation is outdated or not ['yyyymmddHH']",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action='store_true',
+        help='Force processing for the oldest version of all bdeck files in the season.'
+    )
+    parser.add_argument(
+        '-b',
+        '--backfill',
+        action='store_true',
+        help="Process files regardless of forecast initialization datetime"
+    )
+    parser.add_argument(
+        "-l",
+        "--loglevel",
+        type=str,
+        default="DEBUG",
+        choices=["INFO", "DEBUG", "TRACE"],
+        help="Level to set the logger to.",
+    )
+
+    args = parser.parse_args()
+    # configure logger
+    if os.environ.get('RUN_BY_CRON', 0):
+        log_name = f"{__file__.split('/')[-1].split('.')[0]}.log"
+        level = "INFO"
+        config = utils.get_logger_config(log_name, level) 
+        logger.configure(**config)
+        logger.info("Running logging with CRONTAB configuration")
+        logger.info(f"Log level has been set to: {level}")
+    else:
+        log_name = None
+        level = args.loglevel
+        config = utils.get_logger_config(log_name, level) 
+        logger.configure(**config)
+        logger.info(f"Log level has been set to: {level}")
+
+    logger.info(f"Starting {__file__}")
+
+    if args.date_time is None:
+        date_time = NOW
+    else:
+        date_time = datetime.strptime(args.date_time, "%Y%m%d%H")
+    # set date_time to the most recent forecast cycle hour
+    # if date_time is none leave it
+    if date_time is None:
+        pass
+    else:
+        # keep subtracting an hour until we get to 0, 6, 12, or 18
+        while date_time.hour not in [0, 6, 12, 18]:
+            date_time = date_time - timedelta(hours=1)
+        logger.info(f"Datetime has been adjusted to: {date_time.strftime('%Y%m%d%H')}")
+
+    regions = args.regions
+    if regions is None:
+        # default regions
+        regions = ["al", "ep", "wp", "cp", "io"]
+    else:
+        regions = regions.split(',')
+    logger.info(f"Runing for the following regions: {regions}")
+    basin_config = dict()
+    for region in regions:
+        if region in ['al', 'ep', 'cp']:
+            basin_config[region] = {
+                'pattern': settings.atcf.bdeck.file_pattern.format_map({'basin': region, 'year': date_time.year}),
+                'url': settings.atcf.bdeck.nhc_url
+            }
+        elif region in ['wp', 'io', 'sh']:
+            basin_config[region] = {
+                'pattern': settings.atcf.bdeck.file_pattern.format_map({'basin': region, 'year': date_time.year}),
+                'url': settings.atcf.bdeck.jtwc_url
+            }
+
+    force = args.force
+
+    run(basin_config, date_time, force)
+
+    logger.info(f"Finished running {__file__}")
