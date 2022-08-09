@@ -46,7 +46,11 @@ def processObservations(region, date_time=None, staging_dir=None):
                     logger.trace(f"{date_time} not in {file_path.as_posix()}")
                     continue
             logger.info(f"Processing {file_path.as_posix()}")
-            storm_dict = atcf.toStormDict(file_path)
+            try:
+                storm_dict = atcf.toStormDict(file_path)
+            except:
+                logger.error(f"Unable to parse {file_path.as_posix()}")
+                continue
             # get the matching storm record
             storm = (
                 session.query(Storm)
@@ -57,7 +61,7 @@ def processObservations(region, date_time=None, staging_dir=None):
 
             # dont process observations if we can't associate them with an existing storm
             if storm is None:
-                logger.info(f"No storm in DB matching {storm_dict.get('nhc_id')}. Skipping {file_path.name}")
+                logger.warning(f"No storm in DB matching {storm_dict.get('nhc_id')}. Skipping {file_path.name}")
                 continue
 
             df = atcf.parse_bDeck(file_path)

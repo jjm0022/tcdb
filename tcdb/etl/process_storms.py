@@ -97,7 +97,7 @@ def investSearch(session, storm_dict, date_time):
                 return None  # We don't want to make any updates to invests that have transitioned to named storms
 
         # check to see if there's any existing invests with a matching start_date
-        # apparently JTWC doesn't give a shit and the first couple of updates for an invest the starting information is capable
+        # apparently JTWC cant be trusted and the first couple of updates for an invest the starting information is capable
         # of changing significantly so I'm starting to think it will be better to just search for nhc_id and then make sure the
         # start date is within 24 hours to match because we can't count on the start lat/lon or start date to be correct in the first
         # update for a storm
