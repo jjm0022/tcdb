@@ -30,7 +30,7 @@ def updateActiveSystems(max_hours_old=24):
                 # flush the changes/additions to the DB
                 session.commit()
 
-def removeOldInvests(max_days_old=7):
+def removeOldInvests(max_days_old=30):
     """
     Remove any records in the storm table that are still and invest (haven't transitions to a named storm) and are older
     than `max_days_old` days old.
