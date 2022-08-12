@@ -17,6 +17,8 @@ from tcdb.models import (
     Region
 )
 
+from tcdb.datasets import StormDataset
+
 def export(session):
 
     obs = session.query(Observation).all()
@@ -44,4 +46,6 @@ if __name__ == "__main__":
     engine = create_engine(f"mysql+mysqlconnector://{settings.db.get('USER')}:{settings.db.get('PASS')}@{settings.db.get('HOST')}:{settings.db.get('PORT')}/{settings.db.get('SCHEMA')}")
     Session = sessionmaker(bind=engine)
     session = Session()
-    
+
+    storm = session.query(Storm).where(Storm.id == 8).one() 
+    sd = StormDataset.fromStorm(storm)
