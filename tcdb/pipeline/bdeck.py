@@ -124,7 +124,7 @@ def processBdecks(bdeck_dir, storm_dir, backfill=False):
             files_saved += 1
     logger.info(f"Saved {files_saved} new storm files")
 
-def run(basin_config, date_time, force, backfill):
+def run(basin_config, date_time, force, backfill=False):
     """_summary_
 
     TODO: incorporate backfill
