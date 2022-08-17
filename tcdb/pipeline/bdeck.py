@@ -16,13 +16,12 @@ from tcdb.config import settings
 
 from tcdb.etl.process_storms import processStorms
 from tcdb.etl.process_obs import processObservations
+#from tcdb.etl import Invest
 
 from IPython.core.debugger import set_trace
 
 NOW = pendulum.now("UTC")
 timestamp = NOW.strftime("%Y%m%dT%H%M")
-
-backfill = True
 
 
 def getFileNames(response, pattern):
@@ -43,87 +42,6 @@ def downloadLocally(url, local_path):
     return True
 
 
-def getStormDict(text):
-    """
-    TODO: REMOVE THIS FUNCTION 
-    """
-
-    lines = text.split("\n")
-    lines = [(l.replace(" ", "")).split(",") for l in lines]
-    lines = [line for line in lines if len(line) >= 27]  # dont keep lines that dont at lest have storm name
-    start_date = pendulum.from_format(str(lines[0][2]), "YYYYMMDDHH", tz='UTC')
-    end_date = pendulum.from_format(str(lines[-1][2]), "YYYYMMDDHH", tz='UTC')
-    start_lat = lines[0][6]
-    start_lon = lines[0][7]
-    if start_lat.endswith("N"):
-        start_lat = round(float(start_lat[:-1]) * 0.1, 1)
-    elif start_lat.endswith("S"):
-        start_lat = round(float(start_lat[:-1]) * -0.1, 1)
-    if start_lon.endswith("W"):
-        start_lon = round(float(start_lon[:-1]) * -0.1, 1)
-    elif start_lon.endswith("E"):
-        start_lon = round(float(start_lon[:-1]) * 0.1, 1)
-
-    basin = lines[-1][0]
-    winds = [int(line[8]) for line in lines]
-    max_wind = 0
-    for wind in winds:
-        max_wind = max(wind, max_wind)
-
-    nhc_number = int(lines[-1][1])
-    nhc_id = f"{basin.upper()}{nhc_number:02d}{start_date.year}"
-    storm_type = utils.getStormType(max_wind, basin)
-    name = f"{storm_type}-{lines[-1][27]}"
-
-    return dict(
-        basin=basin,
-        nhc_number=nhc_number,
-        nhc_id=nhc_id,
-        season=start_date.year,
-        start_date=start_date.isoformat(),
-        end_date=end_date.isoformat(),
-        name=name,
-        start_lat=start_lat,
-        start_lon=start_lon,
-    )
-
-
-def processBdecks(bdeck_dir, storm_dir, backfill=False):
-    """
-    TODO: REMOVE THIS FUNCTION 
-    """
-
-    files_saved = 0
-
-    for file_path in sorted(bdeck_dir.glob(f"*.csv")):
-        timestamp = file_path.name.split('.')[0].split('_')[-1]
-        file_datetime = pendulum.parse(timestamp, tz='UTC')
-        
-        # if backfill is True, process all files
-        if backfill:
-            pass
-        # if backfill is False, only process files that were created no more than 6 hours ago
-        else:
-            if (now - file_datetime).total_hours() >= 6:
-                continue
-
-        with open(file_path, 'r') as txt:
-            text = txt.read()
-        storm = getStormDict(text.strip())
-
-        date_str = pendulum.parse(storm.get('start_date')).format("YYYYMMDDHH")
-        file_name = f"{date_str}_{storm['nhc_id']}_{timestamp}.json"
-
-        # only save the storm dict if it doesnt already exist
-        if not storm_dir.joinpath(file_name).exists():
-            logger.debug(f"Saving storm data for {storm.get('name')} to {file_name}")
-            with open(storm_dir.joinpath(file_name), 'w') as j:
-                # The `indent` and `sort_keys` options are needed to ensure we can consistantly 
-                # check for duplicate files without these keywords the file diff doesnt work.
-                json.dump(storm, j, indent=4, sort_keys=True)
-            files_saved += 1
-    logger.info(f"Saved {files_saved} new storm files")
-
 def run(basin_config, date_time, force, backfill=False):
     """_summary_
 
@@ -135,8 +53,6 @@ def run(basin_config, date_time, force, backfill=False):
         force (_type_): _description_
         backfill (_type_): _description_
     """
-    
-
     # set up paths
     download_path = Path(settings.paths.temporary_dir)
     staging_dir = Path(settings.paths.staging_dir).joinpath('bdeck')
@@ -220,6 +136,12 @@ if __name__ == "__main__":
         help="Datetime use to determine if an observation is outdated or not ['yyyymmddHH']",
     )
     parser.add_argument(
+        '-u',
+        '--update_invests',
+        action='store_true',
+        help="Update static the invest file for the provided 'date_time'"
+    )
+    parser.add_argument(
         "-f",
         "--force",
         action='store_true',
@@ -295,5 +217,8 @@ if __name__ == "__main__":
     force = args.force
 
     run(basin_config, date_time, force)
+
+    if args.update_invests:
+        updateInvestFile(date_time)
 
     logger.info(f"Finished running {__file__}")
