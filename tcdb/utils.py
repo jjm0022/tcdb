@@ -1,6 +1,50 @@
+from types import GeneratorType
 import numpy as np
 import json
+from loguru import logger
+import datetime
+from pathlib import Path
 
+def json_encode(obj):
+
+    def isoformat(x):
+        return x.isoformat()
+
+    encoders_by_type = {
+        bytes: lambda o: o.decode(),
+        datetime.date: isoformat,
+        datetime.datetime: isoformat,
+        datetime.time: isoformat,
+        datetime.timedelta: lambda td: td.total_seconds(),
+        frozenset: list,
+        Path: str,
+        set: list,
+    }
+
+    for base in obj.__class__.__mro__[:-1]:
+        try:
+            encoder = encoders_by_type[base]
+        except KeyError:
+            logger.warning(f"Unable to determine an encoder for {base}")
+            continue
+    return encoder(obj)
+
+
+def is_serializable(data):
+    """Determine if a variable can be serialized. 
+
+    Args:
+        data (any): Variable to be serialized
+
+    Returns:
+        bool: True if the variable can be serialized
+    """
+    try:
+        json.dumps(data)
+        return True
+    except (TypeError, OverflowError):
+        # OverflowError is thrown when data contains a number which is too large for JSON to decode
+        return False
 
 def greatCircleDistance(lat1, lon1, lat2, lon2, units="nm"):
 
@@ -76,19 +120,3 @@ def get_storm_type(wind_speed,region="AL"):
     else:
         return "CY"
     
-
-def is_serializable(data):
-    """Determine if a variable can be serialized. 
-
-    Args:
-        data (any): Variable to be serialized
-
-    Returns:
-        bool: True if the variable can be serialized
-    """
-    try:
-        json.dumps(data)
-        return True
-    except (TypeError, OverflowError):
-        # OverflowError is thrown when data contains a number which is too large for JSON to decode
-        return False

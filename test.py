@@ -14,7 +14,8 @@ from tcdb.models import (
     Model,
     Forecast,
     DataSource,
-    Region
+    Region,
+    Invest
 )
 
 from tcdb.datasets import StormDataset
@@ -48,4 +49,5 @@ if __name__ == "__main__":
     session = Session()
 
     storm = session.query(Storm).where(Storm.id == 8).one() 
-    sd = StormDataset.fromStorm(storm)
+
+    inv = Invest.fromStorm(storm)

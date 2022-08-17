@@ -13,8 +13,8 @@ from sqlalchemy.orm import sessionmaker
 
 from tcdb.config import settings
 from tcdb.etl import atcf
-from tcdb.models import Forecast, Track, Step, DataSource, Model, Storm
-from tcdb.etl import syntracks, invest
+from tcdb.models import Forecast, Track, Step, DataSource, Model, Storm, invest
+from tcdb.etl import syntracks
 
 DATE_TIME = datetime.now(tz=timezone.utc)
 DATE_STR = DATE_TIME.isoformat().split(".")[0]

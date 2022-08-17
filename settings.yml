@@ -21,6 +21,7 @@ jmiller:
         local_mysql_dir: /Work_Data/tcdb/data/mysql
         static_data_dir: /Work_Data/tcdb/data/static
         temporary_dir: /Work_Data/tcdb/data/tmp
+        invest_file_template: "cfan_invest_{basin}_{datetime}.json"
     atcf:
         bdeck:
             file_pattern: "b{basin}[012349][0123456789]{year}.dat"
