@@ -1,9 +1,7 @@
-from turtle import up
 from loguru import logger
-import datetime
 
 from sqlalchemy.orm import declarative_base
-from tcdb.utils import is_serializable
+from tcdb.utils import is_serializable, json_encode
 from tcdb.formatting import pretty_print
 
 Base = declarative_base()
@@ -18,14 +16,8 @@ class DefaultTable(object):
             summary.append(f"{' '*4}{col_name}{self.__getattribute__(col.name)!r}")
         return "\n".join(summary) + "\n"
 
-    def to_dict(self, serializable=False):
-        """Convert a table class object to a dict
-
-        Args:
-            serializable (bool, optional): Convert all object to a type that can be serialized and saved to a JSON file. Defaults to False
-
-        Raises:
-            ValueError: Raised for types that I'm not sure what to convert to
+    def dict(self):
+        """Convert a table object to a dict
 
         Returns:
             dict
@@ -33,19 +25,25 @@ class DefaultTable(object):
         out_dict = dict()
         for col in self.__table__.columns:
             out_dict[col.name] = self.__getattribute__(col.name)
-
-        if serializable:
-            for key, value in out_dict.items():
-                if is_serializable(value):
-                    continue
-                else:
-                    if isinstance(value, datetime.datetime):
-                        logger.trace(f"Converting {key} from {type(value)} to str")
-                        out_dict[key] = value.isoformat()
-                    else:
-                        logger.error(f"Not sure how to make {key} ({type(value)}) serializable")
-                        raise ValueError
         return out_dict
+
+    def json(self):
+        """Convert a table object to a dict that meets json specs (datetime objects are converted to strings)
+
+        Raises:
+            ValueError: Raised for types that I'm not sure what to convert to
+
+        Returns:
+            dict
+        """
+        out_dict = self.dict()
+
+        for key, value in out_dict.items():
+            if is_serializable(value):
+                continue
+            else:
+                out_dict[key] = json_encode(value)
+        return out_dict 
 
     def updateFromDict(self, updates, check_only=False):
         """Compare the values in `updates` to the values of attributes with the same name in 
