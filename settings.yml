@@ -26,11 +26,11 @@ jmiller:
         bdeck:
             file_pattern: "b{basin}[012349][0123456789]{year}.dat"
             nhc_url: https://ftp.nhc.noaa.gov/atcf/btk/
-            jtwc_url: https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/
+            jtwc_url: "https://www.nrlmry.navy.mil/atcf_web/docs/tracks/{year}/"
         adeck:
             file_pattern: "a{basin}[012349][0123456789]{year}.dat"
             nhc_url: https://ftp.nhc.noaa.gov/atcf/aid_public/
-            jtwc_url: https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/
+            jtwc_url: https://hurricanes.ral.ucar.edu/repository/data/adecks_open/
             models:
                 - OFCL
                 - OFCI

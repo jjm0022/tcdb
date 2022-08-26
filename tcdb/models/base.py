@@ -27,7 +27,7 @@ class DefaultTable(object):
             out_dict[col.name] = self.__getattribute__(col.name)
         return out_dict
 
-    def json(self):
+    def json(self, omit=[]):
         """Convert a table object to a dict that meets json specs (datetime objects are converted to strings)
 
         Raises:
@@ -39,6 +39,8 @@ class DefaultTable(object):
         out_dict = self.dict()
 
         for key, value in out_dict.items():
+            if key in omit:
+                continue
             if is_serializable(value):
                 continue
             else:
