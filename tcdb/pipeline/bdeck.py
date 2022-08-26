@@ -31,9 +31,10 @@ def getFileNames(response, pattern):
     return set(file_list) 
 
 
-def downloadLocally(url, local_path):
+def downloadLocally(url, local_path, verify=True):
+
     try:
-        response = requests.get(url)
+        response = requests.get(url, verify=verify)
         with open(local_path, 'w') as f:
             f.write(response.text)
     except Exception as e:
@@ -70,8 +71,15 @@ def run(basin_config, date_time, force, backfill=False):
             url = basin_dict.get('url')
             file_pattern = basin_dict.get('pattern')
 
+            # https://tropycal.github.io/tropycal/api/generated/tropycal.realtime.Realtime.html#tropycal.realtime.Realtime:~:text=return%20online%20again.-,Warning,-JTWC%E2%80%99s%20SSL%20certificate
+            if "nrlmry" in url:
+                logger.warning("Not using SSL certification")
+                verify = False
+            else:
+                verify = True
+
             # get list of files on the server
-            response = requests.get(url)
+            response = requests.get(url, verify=verify)
             # parse file names from the HTML
             file_names = getFileNames(response, file_pattern)
 
@@ -81,9 +89,13 @@ def run(basin_config, date_time, force, backfill=False):
             for file_name in file_names:
                 file_url = url + file_name
                 tmp_path = download_path.joinpath(file_name)
-                if downloadLocally(file_url, tmp_path):
+                if downloadLocally(file_url, tmp_path, verify=verify):
                     # check to see if the contents of the file have been updated
                     if fs_utils.isContentsUnique(tmp_path, bdeck_dir.glob(f"{file_name.split('.')[0]}*")):
+                        # work-around for the bug where WP bdecks are randomly empty on the JTWC data site
+                        if tmp_path.stat().st_size == 0:
+                            logger.error(f'{tmp_path.as_posix()} is empty. Not replacing')
+                            continue
                         logger.info(f"{file_name} has been updated")
                         final_path = bdeck_dir.joinpath(f"{file_name.split('.')[0]}_{timestamp}.csv")
                         staging_path = staging_dir.joinpath(f"{file_name.split('.')[0]}_{timestamp}.csv")
@@ -211,7 +223,7 @@ if __name__ == "__main__":
         elif region in ['wp', 'io', 'sh']:
             basin_config[region] = {
                 'pattern': settings.atcf.bdeck.file_pattern.format_map({'basin': region, 'year': date_time.year}),
-                'url': settings.atcf.bdeck.jtwc_url
+                'url': settings.atcf.bdeck.jtwc_url.format_map({'year': date_time.year})
             }
 
     force = args.force
