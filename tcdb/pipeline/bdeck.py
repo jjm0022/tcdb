@@ -2,13 +2,11 @@ import argparse
 import requests
 import re
 import os
-import json
 import pendulum
 from datetime import datetime, timedelta
 from pathlib import Path
 from loguru import logger
 from tempfile import TemporaryDirectory
-
 
 from tcdb.pipeline import utils
 from tcdb.pipeline import fs_utils
@@ -17,8 +15,6 @@ from tcdb.config import settings
 from tcdb.etl.process_storms import processStorms
 from tcdb.etl.process_obs import processObservations
 #from tcdb.etl import Invest
-
-from IPython.core.debugger import set_trace
 
 NOW = pendulum.now("UTC")
 timestamp = NOW.strftime("%Y%m%dT%H%M")
@@ -227,11 +223,15 @@ if __name__ == "__main__":
             }
 
     force = args.force
+    try:
+        run(basin_config, date_time, force)
+        if args.update_invests:
+            # TODO
+            updateInvestFile(date_time)
 
-    run(basin_config, date_time, force)
-
-    if args.update_invests:
-        # TODO
-        updateInvestFile(date_time)
-
-    logger.info(f"Finished running {__file__}")
+    finally:
+        logger.info(f"Removing any files remaining in the staging directory")
+        staging_dir = Path(settings.paths.staging_dir).joinpath('bdeck')
+        for file_path in staging_dir.glob("b*.csv"):
+            file_path.unlink()
+        logger.info(f"Finished running {__file__}")
