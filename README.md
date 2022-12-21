@@ -18,5 +18,5 @@ A tropical cyclone database pipeline
 The environment vairiables needed to run some bash scripts are sourced from `.env`. Just copy the [`.env_example`](https://github.com/jjm0022/tcdb/blob/main/.env_example) and edit the variables:
 
 ```bash
-cp .env_examples .env
+cp .env_example .env
 ```
