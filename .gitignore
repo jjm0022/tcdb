@@ -1,3 +1,7 @@
+### Secrets ###
+.secrets.yml
+.env
+
 ### Data ###
 *.csv
 *.dat
