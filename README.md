@@ -8,10 +8,10 @@
 
 
 ## Environment Variables needed to run
-TCDB_DB = db_name
+`TCDB_DB` = db_name
 
-TCDB_PW = your_password_here
+`TCDB_PW` = your_password_here
 
-TCDB_HOST = 0.0.0.0
+`TCDB_HOST` = 0.0.0.0
 
-TCDB_PORT = 0000
+`TCDB_PORT` = 0000
