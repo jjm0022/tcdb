@@ -1,27 +1,21 @@
 jmiller:
     ECMWF:
         dir_name: DY
-        syntrack_prefix: ""
         num_ens: 52
         max_step: 360
         temporal_resolution: 6
     NCEP:
         dir_name: GEFS
-        syntrack_prefix: gefs_
         num_ens: 32
         max_step: 384
         temporal_resolution: 6
     paths:
-        syntrack:
-            al: /Users/jmiller/Work/data
-        invest:
-            al: /Users/jmiller/Work/data/INV/
         data_lake: /Work_Data/tcdb/data/lake
         staging_dir: /Work_Data/tcdb/data/staging
         local_mysql_dir: /Work_Data/tcdb/data/mysql
         static_data_dir: /Work_Data/tcdb/data/static
         temporary_dir: /Work_Data/tcdb/data/tmp
-        invest_file_template: "cfan_invest_{basin}_{datetime}.json"
+        invest_file_template: "invest_{basin}_{datetime}.json"
     atcf:
         bdeck:
             file_pattern: "b{basin}[012349][0123456789]{year}.dat"

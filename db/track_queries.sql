@@ -2,7 +2,7 @@ SELECT
 	tracks.track_id,
 	tracks.ensemble_number,
 	storms.name,
-	storms.cfan_id,
+	storms.id,
 	storms.nhc_id,
 	steps.hour,
 	steps.latitude,

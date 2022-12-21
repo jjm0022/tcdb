@@ -33,7 +33,7 @@ class Syntrack:
 
     def __repr__(self) -> str:
         width = 60
-        summary = ["\n<cfan.Syntrack>"]
+        summary = ["\n<Syntrack>"]
         field_keys = {
             "storm_name": self.storm_name,
             "annual_id": self.annual_id,
@@ -350,7 +350,7 @@ def checkUnassignedTracks(tracks, inv, dist_threshold, time_threshold):
         if (track.valid[0] - inv.valid) >= timedelta(days=time_threshold):
             continue
         # make sure storm is within distance threshold
-        # distance = greatCircleDistance(track.lat[0], track.lon[0], inv.latitude, inv.longitude) can only be used if we're not using the in-house cfan-invest files
+        # distance = greatCircleDistance(track.lat[0], track.lon[0], inv.latitude, inv.longitude) can only be used if we're not using the in-house invest files
         distance = greatCircleDistance(track.lat[0], track.lon[0], inv.lat, inv.lon)
         if distance <= dist_threshold:
             passing_tracks.append((track, distance, len(track.hour)))
