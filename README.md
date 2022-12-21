@@ -7,7 +7,8 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/jjm0022/tcdb)
 
 
-## Environment Variables needed to run some bash scripts are sourced from `.env`. Just copy the example file and edit the variables:
+## Environment Variables
+The environment vairiables needed to run some bash scripts are sourced from `.env`. Just copy the example file and edit the variables:
 ```
 cp .env_examples .env
 ```
