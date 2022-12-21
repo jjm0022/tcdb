@@ -7,7 +7,10 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/jjm0022/tcdb)
 
 
-## Environment Variables needed to run
+## Environment Variables needed to run some bash scripts are sourced from `.env`. Just copy the example file and edit the variables:
+```
+cp .env_examples .env
+```
 `TCDB_DB` = db_name
 
 `TCDB_PW` = your_password_here
