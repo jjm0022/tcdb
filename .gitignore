@@ -1,5 +1,6 @@
 ### Secrets ###
 .secrets.yml
+secret_settings.yml
 .env
 
 ### Data ###
