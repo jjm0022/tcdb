@@ -49,7 +49,7 @@ def processAdeck(
     """Process the provided ADECK file and save the output in a file that contains a single model and datetime per file. If an output file already
     exists it will only be saved if the forecast initialization datetime is less than 48 hours old.
 
-    If you want to process a single initialization datetime and it is older than 7 days you need to set `backfill` to True
+    NOTE: If you want to process a single initialization datetime and it is older than 7 days you need to set `backfill` to True
 
     Args:
         input_path (pathlib.Path): Path to the ADECK file
