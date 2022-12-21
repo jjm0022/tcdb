@@ -14,8 +14,11 @@ from tcdb.models import (
     Model,
     Forecast,
     DataSource,
-    Region
+    Region,
+    Invest
 )
+
+from tcdb.datasets import StormDataset
 
 def export(session):
 
@@ -44,4 +47,7 @@ if __name__ == "__main__":
     engine = create_engine(f"mysql+mysqlconnector://{settings.db.get('USER')}:{settings.db.get('PASS')}@{settings.db.get('HOST')}:{settings.db.get('PORT')}/{settings.db.get('SCHEMA')}")
     Session = sessionmaker(bind=engine)
     session = Session()
-    
+
+    storm = session.query(Storm).where(Storm.id == 8).one() 
+
+    inv = Invest.fromStorm(storm)

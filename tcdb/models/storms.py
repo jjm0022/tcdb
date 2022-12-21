@@ -27,8 +27,8 @@ class Storm(Base, DefaultTable):
     run_id = Column(String(255), nullable=False)
     last_update = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
 
-    _tracks = relationship("Track", order_by="Track.id", back_populates="_storm")
-    _observations = relationship("Observation", order_by="Observation.datetime_utc", back_populates="_storm")
+    _tracks = relationship("Track", order_by="Track.id", back_populates="_storm", cascade="all, delete-orphan")
+    _observations = relationship("Observation", order_by="Observation.datetime_utc", back_populates="_storm", cascade="all, delete-orphan")
     _region = relationship("Region", back_populates="_storms")
 
     __table_args__ = (UniqueConstraint("start_date", "nhc_id", name="storms_index"),)

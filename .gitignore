@@ -11,8 +11,10 @@
 *.tax2010
 *.vcf
 *.xml
+*.txt
 
 data/
+.vscode
 
 ### Database ###
 *.accdb

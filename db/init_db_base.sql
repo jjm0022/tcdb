@@ -128,7 +128,7 @@ ALTER TABLE observations ADD FOREIGN KEY (storm_id) REFERENCES storms(id);
 ALTER TABLE steps ADD FOREIGN KEY (track_id) REFERENCES tracks(id);
 
 ALTER TABLE tracks ADD FOREIGN KEY (forecast_id) REFERENCES forecasts(id);
-ALTER TABLE tracks ADD FOREIGN KEY (storm_id) REFERENCES storm(id);
+ALTER TABLE tracks ADD FOREIGN KEY (storm_id) REFERENCES storms(id);
 
 ALTER TABLE forecasts ADD FOREIGN KEY (region_id) REFERENCES regions(id);
 ALTER TABLE forecasts ADD FOREIGN KEY (data_source_id) REFERENCES data_sources(id);
@@ -145,5 +145,3 @@ CREATE UNIQUE INDEX tracks_index ON tracks(forecast_id, storm_id, ensemble_numbe
 CREATE UNIQUE INDEX steps_index ON steps(track_id, hour);
 
 SET FOREIGN_KEY_CHECKS=1;
-
-LOAD DATA INFILE '/var/lib/mysql-files/models_table.csv' INTO TABLE models FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';

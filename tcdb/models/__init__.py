@@ -6,3 +6,4 @@ from tcdb.models.regions import Region
 from tcdb.models.steps import Step
 from tcdb.models.tracks import Track
 from tcdb.models.data_sources import DataSource
+from tcdb.models.invest import Invest

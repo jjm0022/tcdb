@@ -9,17 +9,19 @@ def validate_pressure(x, raise_on_fail=False):
         return 1000
     if (x >= 850) and (x <= 1050):
         return x
+    elif x == 0: # the track-only ATCF models  use MSLP == 0
+        return x
     else:
         if raise_on_fail:
             logger.error(f"Unrealistic value of {x} identified for pressure")
             raise ValueError(f"Unrealistic value of {x} identified for pressure")
         else:
             logger.trace(f"Unrealistic value of {x} identified for pressure")
-            return None
+            return 1000
 
 
 def validate_velocity(x, raise_on_fail=False):
-    if (x >= 1) and (x <= 250):
+    if (x >= 0) and (x <= 250):
         return x
     else:
         if raise_on_fail:

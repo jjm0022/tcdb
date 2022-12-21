@@ -16,6 +16,38 @@ jmiller:
             al: /Users/jmiller/Work/data
         invest:
             al: /Users/jmiller/Work/data/INV/
-        staging_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/staging
-        local_mysql_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/mysql
-        static_data_dir: /Users/jmiller/Dropbox/git/projects/tcdb/data/static
+        data_lake: /Work_Data/tcdb/data/lake
+        staging_dir: /Work_Data/tcdb/data/staging
+        local_mysql_dir: /Work_Data/tcdb/data/mysql
+        static_data_dir: /Work_Data/tcdb/data/static
+        temporary_dir: /Work_Data/tcdb/data/tmp
+        invest_file_template: "cfan_invest_{basin}_{datetime}.json"
+    atcf:
+        bdeck:
+            file_pattern: "b{basin}[012349][0123456789]{year}.dat"
+            nhc_url: https://ftp.nhc.noaa.gov/atcf/btk/
+            jtwc_url: "https://www.nrlmry.navy.mil/atcf_web/docs/tracks/{year}/"
+        adeck:
+            file_pattern: "a{basin}[012349][0123456789]{year}.dat"
+            nhc_url: https://ftp.nhc.noaa.gov/atcf/aid_public/
+            jtwc_url: https://hurricanes.ral.ucar.edu/repository/data/adecks_open/
+            models:
+                - OFCL
+                - OFCI
+                - AVNO #
+                - AEMN # GEFS Ensemble Mean
+                - EMX  # ECMWF HRES
+                - EEMN # ECMWF Ens Mean
+                - HWRF
+                - HWFI
+                - HMON
+                - HMNI
+                - JTWC
+                - CMC  # Canadian
+                - LGEM
+                - SHIP
+                - EGRR
+                - HCCA
+                - IVCN
+                - TVCA
+                - FSSE

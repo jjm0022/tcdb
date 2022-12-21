@@ -1,3 +1,5 @@
+import pandas as pd
+
 from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy import Column, Integer, String, TIMESTAMP, text
@@ -18,7 +20,7 @@ class Track(Base, DefaultTable):
 
     __table_args__ = (UniqueConstraint("forecast_id", "storm_id", "ensemble_number", name="tracks_index"),)
 
-    _steps = relationship("Step", order_by="Step.id", back_populates="_track")
+    _steps = relationship("Step", order_by="Step.id", back_populates="_track", cascade="all, delete-orphan")
     _storm = relationship("Storm", back_populates="_tracks")
     _forecast = relationship("Forecast", back_populates="_tracks")
 
@@ -33,13 +35,13 @@ class Track(Base, DefaultTable):
         )
 
     @property
-    def num_steps(self):
+    def model(self):
+        return self._forecast.model_short
+    
+    @property
+    def init(self):
+        return self._forecast.datetime_utc
+
+    @property
+    def numTrackSteps(self):
         return len(self._steps)
-
-    @property
-    def storm_name(self):
-        return self._storm.name
-
-    @property
-    def forecast_key(self):
-        return f"{self._forecast.model_short} {self._forecast.datetime_utc.isoformat()}"

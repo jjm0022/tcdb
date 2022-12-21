@@ -9,6 +9,9 @@ from datetime import timezone, datetime, timedelta
 
 from tcdb.utils import get_storm_type 
 import tcdb.validation as val
+import warnings
+warnings.filterwarnings("ignore")
+
 
 UTC = timezone.utc
 
@@ -46,14 +49,24 @@ def parse_aDeck(path):
     ]
 
     # with open(file_name, 'rb') as file_handle:
-    string_buffer = compressed_atcf_to_strio(path)
-    df = pd.read_csv(
-        string_buffer,
-        names=header_names,
-        index_col=False,
-        na_values=["", " ", " " * 2],
-        usecols=range(0, len(header_names)),
-    )
+    if path.name.endswith('.gz'):
+        string_buffer = compressed_atcf_to_strio(path)
+        df = pd.read_csv(
+            string_buffer,
+            names=header_names,
+            index_col=False,
+            na_values=["", " ", " " * 2],
+            usecols=range(0, len(header_names)),
+        )
+    else:
+        df = pd.read_csv(
+            path,
+            names=header_names,
+            index_col=False,
+            na_values=["", " ", " " * 2],
+            usecols=range(0, len(header_names)),
+        )
+
 
     df["DATETIME"] = pd.to_datetime(df.DATETIME, format="%Y%m%d%H")
     # df["DATETIME"] = df["DATETIME"].dt.tz_localize(UTC)
@@ -277,6 +290,15 @@ def toStormDict(path):
     if not isinstance(path, pathlib.Path):
         path = Path(path)
 
+
+    basin = path.name[1:3]
+    season = int(path.stem.split('_')[0][5:])
+    # determine whic organization the data is coming from (to be used in the name for invests)
+    if basin.lower() in ['al', 'ep', 'cp']:
+        org = 'NHC'
+    else:
+        org = 'JTWC'
+
     df = parse_bDeck(path)
     if df.empty:
         return None
@@ -289,13 +311,13 @@ def toStormDict(path):
     nhc_number = df.SNUM.values[-1]
     subregion = df.SUBREGION.values[-1]
     if nhc_number >= 70:
-        name = f"NHC-{nhc_number:02d}{subregion}"
+        name = f"{org.upper()}-{nhc_number:02d}{subregion}"
     else:
         name = f"{storm_type}-{name}"
 
     start_date = df.DATETIME.min()
     end_date = df.DATETIME.max()
-    season = start_date.year
+    #seasot = start_date.year
     nhc_number = nhc_number
     region = df.BASIN.values[0]
     nhc_id = f"{region}{nhc_number:02d}{season}".upper()
@@ -376,18 +398,18 @@ def stepFromDataFrame(df, hour, track_id):
         longitude=val.validate_longitude(df.LON.values[0], raise_on_fail=True),
         intensity_kts=val.validate_velocity(df.VMAX.values[0], raise_on_fail=True),
         mslp_mb=val.validate_pressure(df.MSLP.values[0]),
-        r34_ne=r34.get("NE"),
-        r34_se=r34.get("SE"),
-        r34_sw=r34.get("SW"),
-        r34_nw=r34.get("NW"),
-        r50_ne=r50.get("NE"),
-        r50_se=r50.get("SE"),
-        r50_sw=r50.get("SW"),
-        r50_nw=r50.get("NW"),
-        r64_ne=r64.get("NE"),
-        r64_se=r64.get("SE"),
-        r64_sw=r64.get("SW"),
-        r64_nw=r64.get("NW"),
+        #r34_ne=r34.get("NE"),
+        #r34_se=r34.get("SE"),
+        #r34_sw=r34.get("SW"),
+        #r34_nw=r34.get("NW"),
+        #r50_ne=r50.get("NE"),
+        #r50_se=r50.get("SE"),
+        #r50_sw=r50.get("SW"),
+        #r50_nw=r50.get("NW"),
+        #r64_ne=r64.get("NE"),
+        #r64_se=r64.get("SE"),
+        #r64_sw=r64.get("SW"),
+        #r64_nw=r64.get("NW"),
     )
 
     return step

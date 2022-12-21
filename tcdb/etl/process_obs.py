@@ -23,7 +23,7 @@ DATE_STR = DATE_TIME.isoformat().split(".")[0]
 RUN_ID = f"OBS__{DATE_TIME.isoformat()}"
 
 
-def process_observations(region, date_time=None, staging_dir=None):
+def processObservations(region, date_time=None, staging_dir=None):
     paths = settings.get("paths")
 
     if not staging_dir:
@@ -33,18 +33,24 @@ def process_observations(region, date_time=None, staging_dir=None):
     run_id = RUN_ID
     logger.info(f"`run_id` set to: {run_id}")
 
-    engine = create_engine("mysql+mysqlconnector://tc_dev:passwd@127.0.0.1:3307/tc")
+    engine = create_engine(
+        f"mysql+mysqlconnector://{settings.db.get('USER')}:{settings.db.get('PASS')}@{settings.db.get('HOST')}:{settings.db.get('PORT')}/{settings.db.get('SCHEMA')}"
+    )
     Session = sessionmaker(engine)
     with Session() as session:
 
-        for file_path in sorted(staging_dir.glob(f"b{region.lower()}*.dat")):
+        for file_path in sorted(staging_dir.glob(f"b{region.lower()}*.csv")):
             # if a date_time was provided, we only want to process files that have that datetime in them
             if date_time:
                 if not atcf.contains_date(file_path, date_time):
                     logger.trace(f"{date_time} not in {file_path.as_posix()}")
                     continue
             logger.info(f"Processing {file_path.as_posix()}")
-            storm_dict = atcf.toStormDict(file_path)
+            try:
+                storm_dict = atcf.toStormDict(file_path)
+            except:
+                logger.error(f"Unable to parse {file_path.as_posix()}")
+                continue
             # get the matching storm record
             storm = (
                 session.query(Storm)
@@ -55,7 +61,7 @@ def process_observations(region, date_time=None, staging_dir=None):
 
             # dont process observations if we can't associate them with an existing storm
             if storm is None:
-                logger.info(f"No storm in DB matching {storm_dict.get('nhc_id')}. Skipping {file_path.name}")
+                logger.warning(f"No storm in DB matching {storm_dict.get('nhc_id')}. Skipping {file_path.name}")
                 continue
 
             df = atcf.parse_bDeck(file_path)
@@ -69,26 +75,18 @@ def process_observations(region, date_time=None, staging_dir=None):
                     .where(Observation.datetime_utc == ob_dict.get("datetime_utc"))
                     .one_or_none()
                 )
-
                 if observation:  # If observation already exists, check to see if it needs to be updated
-                    # Assume the ob_dict has the most up-to-date information and use it to update the Observation object
-                    for key, value in ob_dict.items():
-                        if observation.__getattribute__(key) != value:
-                            logger.debug(
-                                f"Updating {observation.__tablename__}.{key} for record {observation.id} from {observation.__getattribute__(key)} to {value}"
-                            )
-                            observation.__setattr__(key, value)
-
+                    # Assume the ob_dict has the most up-to-date information and use it to update the Observation record
+                    updated_keys = observation.updateFromDict(ob_dict)
+                    if len(updated_keys) == 0:
+                        logger.trace(f"No updates needed for observation {observation.id}")
                     if observation in session.dirty:
                         observation.run_id = RUN_ID
-
                 else:
                     observation = Observation.from_dict(ob_dict)
                     observation.run_id = RUN_ID
                     session.add(observation)
-                    logger.info(
-                        f"Adding new observation record for {storm.name} [{observation.datetime_utc.isoformat()}]"
-                    )
+                    logger.info(f"Adding new observation record for {storm.name} [{observation.datetime_utc.isoformat()}]")
 
             session.commit()
 
@@ -139,4 +137,4 @@ if __name__ == "__main__":
     else:
         # date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H").replace(tzinfo=timezone.utc)
         date_time = datetime.strptime(args.current_datetime, "%Y%m%d%H")
-    process_observations(args.region, date_time, staging_dir=args.input_dir)
+    processObservations(args.region, date_time, staging_dir=args.input_dir)
