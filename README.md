@@ -20,3 +20,10 @@ The environment vairiables needed to run some bash scripts are sourced from `.en
 ```bash
 cp .env_example .env
 ```
+
+## Secrets File
+The file `.secrets.yml` is needed to access the DB. Just copy the `secrets_example.yml` file and edit the variables:
+
+```bash
+cp .secrets_example.yml .secrets.yml
+```
